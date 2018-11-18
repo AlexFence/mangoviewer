@@ -1,0 +1,10 @@
+.overlay-control {
+    color: #ffffff;
+    opacity: 0.6;
+    background: #000000;
+    box-shadow: none;
+}
+
+button.overlay-control {
+	margin: 10px;
+}
