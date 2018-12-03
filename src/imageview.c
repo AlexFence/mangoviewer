@@ -27,6 +27,7 @@ struct _MangoImageView {
     GtkImage *gtk_img;
     MangoFile mangofile;
     int current_img;
+    double zoom;
 };
 
 G_DEFINE_TYPE(MangoImageView, mango_img_view, GTK_TYPE_BIN)
@@ -42,6 +43,8 @@ static void mango_img_view_create_initials(MangoImageView *self) {
     self->gtk_img =  GTK_IMAGE (gtk_image_new_from_pixbuf(self->pixbuf));
     self->current_img = -1;
     self->mangofile = NULL;
+    // 1 = 100%, 0.5 = 50%, 1.5 = 150%
+    self->zoom = 1;
 }
 
 static void mango_img_view_init(MangoImageView *self) {
@@ -49,6 +52,7 @@ static void mango_img_view_init(MangoImageView *self) {
 
     gtk_container_add(GTK_CONTAINER (self->scrollwindow), GTK_WIDGET (self->gtk_img));
     gtk_container_add(GTK_CONTAINER (&self->parent_instance), self->scrollwindow);
+    gtk_widget_add_events(GTK_WIDGET (&self->parent_instance), GDK_SCROLL_MASK);
 }
 
 
@@ -68,11 +72,36 @@ static void mango_img_view_previous(GtkWidget *widget, gpointer user_data) {
     }
 }
 
+
+static void zoom_event(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
+    MangoImageView *self = MANGO_IMAGEVIEW (user_data);
+   /* GdkModifierType modifiers;
+
+  modifiers = gtk_accelerator_get_default_mod_mask ();
+
+  if (event->keysym == GDK_F10
+      && (event->state & modifiers) == GDK_CONTROL_MASK)
+    {
+      g_print ("Control-F10 was pressed\n");
+      return TRUE;
+    }*/
+
+    g_print("%s", "hey!\n");
+    printf("%u\n", event->scroll.direction);
+    if (event->scroll.direction == GDK_SCROLL_UP) {
+        mango_img_view_set_zoom(self, self->zoom + 0.1);
+    } else if (event->scroll.direction == GDK_SCROLL_DOWN) {
+        mango_img_view_set_zoom(self, self->zoom - 0.1);
+    }
+    
+}
+
 MangoImageView *mango_img_view_new(MangoImageViewControls *controls) {
     MangoImageView *instance = g_object_new(MANGO_TYPE_IMAGEVIEW, NULL);
 
     g_signal_connect(G_OBJECT(controls), "next_image", mango_img_view_next, instance);
     g_signal_connect(G_OBJECT(controls), "previous_image", mango_img_view_previous, instance);
+    g_signal_connect(G_OBJECT(instance->scrollwindow), "scroll-event", zoom_event, instance);
 
     return instance;
 }
@@ -129,4 +158,9 @@ void mango_img_view_change_image(MangoImageView *self, int index) {
        // TODO maybe free the old pixbuf? is this needed? maybe? probabbly... 
        gtk_image_set_from_pixbuf(self->gtk_img, pixbuf);
     }
+}
+
+void mango_img_view_set_zoom(MangoImageView *self, double value) {
+    self->zoom = value;
+    printf("%.6f\n", self->zoom);
 }
