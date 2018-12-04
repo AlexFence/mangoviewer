@@ -33,6 +33,8 @@ MangoImageView *mango_img_view_new(MangoImageViewControls*);
 int mango_img_view_load_file(MangoImageView*, char*);
 int mango_img_view_image_count(MangoImageView*);
 void mango_img_view_change_image(MangoImageView*, int);
+void mango_img_view_set_zoom(MangoImageView*, double);
+
 G_END_DECLS
 
 #endif

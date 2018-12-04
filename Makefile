@@ -17,13 +17,13 @@ build: $(CSSHEADERS) mangoviewer
 
 build/%.o: src/%.c $(HEADERS)
 	mkdir -p build
-	gcc -c -o $@ $< $(CFLAGS)
+	gcc -ggdb  -c -o $@ $< $(CFLAGS)
 
 src/%_style.h: src/%.css
 	xxd -i $< >> $@
 
 mangoviewer: $(OBJ) 
-	gcc -o $@ $^ $(CFLAGS) $(LIBS) 
+	gcc -ggdb  -o $@ $^ $(CFLAGS) $(LIBS) 
 
 
 .PHONY: clean
