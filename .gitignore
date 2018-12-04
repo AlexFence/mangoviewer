@@ -1,3 +1,4 @@
-./build/*
 ./mangoviewer
 *_style.h
+build
+mangoviewer
