@@ -87,10 +87,16 @@ static void zoom_event(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
     }*/
 
     g_print("%s", "hey!\n");
-    printf("%u\n", event->scroll.direction);
-    if (event->scroll.direction == GDK_SCROLL_UP) {
+    //printf("%u\n", event->scroll.direction);
+    double x = 0;
+    double y = 0;
+
+    gdk_event_get_scroll_deltas(event, &x, &y);
+    printf("x:%1.2f\ny:%1.2f\n \n", x, y);
+
+    if (x < 0) {
         mango_img_view_set_zoom(self, self->zoom + 0.1);
-    } else if (event->scroll.direction == GDK_SCROLL_DOWN) {
+    } else if (x > 0) {
         mango_img_view_set_zoom(self, self->zoom - 0.1);
     }
     
@@ -152,7 +158,7 @@ void mango_img_view_change_image(MangoImageView *self, int index) {
     GdkPixbuf *pixbuf = gdk_pixbuf_new_from_stream(my_cool_g_stream, NULL, &error);
 
     if (error != NULL) {
-        // TODO display a place holder screen if the data is encrypted 
+        // TODO display a place holderGDK_INTERP_BILINEAR screen if the data is encrypted 
         //      or unreadable for some other reason
     } else {
        // TODO maybe free the old pixbuf? is this needed? maybe? probabbly... 
@@ -160,7 +166,21 @@ void mango_img_view_change_image(MangoImageView *self, int index) {
     }
 }
 
+static GdkPixbuf*  scale_image(GdkPixbuf *pixbuf, double factor) {
+    int w  = gdk_pixbuf_get_width(pixbuf);
+    int h  = gdk_pixbuf_get_height(pixbuf);
+    double new_w = w * factor;
+    double new_h = h * factor;
+
+    return gdk_pixbuf_scale_simple(pixbuf, new_w, new_h, GDK_INTERP_BILINEAR);
+}
+
 void mango_img_view_set_zoom(MangoImageView *self, double value) {
     self->zoom = value;
     printf("%.6f\n", self->zoom);
+    GdkPixbuf * new_img = scale_image(self->pixbuf, self->zoom);
+    gtk_image_set_from_pixbuf(self->gtk_img, new_img);
 }
+
+
+
