@@ -75,31 +75,24 @@ static void mango_img_view_previous(GtkWidget *widget, gpointer user_data) {
 
 static void zoom_event(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
     MangoImageView *self = MANGO_IMAGEVIEW (user_data);
-   /* GdkModifierType modifiers;
+    GdkModifierType modifiers;
+    modifiers = gtk_accelerator_get_default_mod_mask();
 
-  modifiers = gtk_accelerator_get_default_mod_mask ();
+    //if ((event->key.state & modifiers)  == GDK_CONTROL_MASK && event->key.keyval == GDK_KEY_Control_L)  { 
+        g_print("%s", "hey!\n");
 
-  if (event->keysym == GDK_F10
-      && (event->state & modifiers) == GDK_CONTROL_MASK)
-    {
-      g_print ("Control-F10 was pressed\n");
-      return TRUE;
-    }*/
+        double x = 0;
+        double y = 0;
 
-    g_print("%s", "hey!\n");
-    //printf("%u\n", event->scroll.direction);
-    double x = 0;
-    double y = 0;
+        gdk_event_get_scroll_deltas(event, &x, &y);
+        printf("x:%1.2f\ny:%1.2f\n \n", x, y);
 
-    gdk_event_get_scroll_deltas(event, &x, &y);
-    printf("x:%1.2f\ny:%1.2f\n \n", x, y);
-
-    if (x < 0) {
-        mango_img_view_set_zoom(self, self->zoom + 0.1);
-    } else if (x > 0) {
-        mango_img_view_set_zoom(self, self->zoom - 0.1);
-    }
-    
+        if (y < 0.0) {
+            mango_img_view_set_zoom(self, self->zoom + 0.1);
+        } else if (y > 0.0) {
+            mango_img_view_set_zoom(self, self->zoom - 0.1);
+        }
+    //}
 }
 
 MangoImageView *mango_img_view_new(MangoImageViewControls *controls) {
@@ -146,6 +139,17 @@ int mango_img_view_image_count(MangoImageView *self) {
     }
 } 
 
+
+GdkPixbuf* mango_img_view_get_current_pixbuf(MangoImageView *self) {
+    MangoImage mimg = mangofile_get_image(self->mangofile, self->current_img);
+    mangoimg_uncompress(mimg);
+    ImageData img_data = mangoimg_get_image_data(mimg);
+
+    GError *error = NULL;
+    GInputStream *my_cool_g_stream = g_memory_input_stream_new_from_data(img_data.pointer, img_data.length, NULL);
+    return gdk_pixbuf_new_from_stream(my_cool_g_stream, NULL, &error);
+}
+
 void mango_img_view_change_image(MangoImageView *self, int index) {
     self->current_img = index;
 
@@ -166,7 +170,7 @@ void mango_img_view_change_image(MangoImageView *self, int index) {
     }
 }
 
-static GdkPixbuf*  scale_image(GdkPixbuf *pixbuf, double factor) {
+static GdkPixbuf* scale_image(GdkPixbuf *pixbuf, double factor) {
     int w  = gdk_pixbuf_get_width(pixbuf);
     int h  = gdk_pixbuf_get_height(pixbuf);
     double new_w = w * factor;
@@ -176,9 +180,14 @@ static GdkPixbuf*  scale_image(GdkPixbuf *pixbuf, double factor) {
 }
 
 void mango_img_view_set_zoom(MangoImageView *self, double value) {
-    self->zoom = value;
+    if (value > 0.1)  {
+        self->zoom = value;
+    } else {
+        self->zoom = 0.1;
+    }
     printf("%.6f\n", self->zoom);
-    GdkPixbuf * new_img = scale_image(self->pixbuf, self->zoom);
+    GdkPixbuf * new_img = scale_image(mango_img_view_get_current_pixbuf(self), self->zoom);
+    printf("aaa");
     gtk_image_set_from_pixbuf(self->gtk_img, new_img);
 }
 
